@@ -1,11 +1,12 @@
-from typing import List
+
 from fastapi import FastAPI, HTTPException, status
-from app.models import Room, RoomCreate, Booking, BookingCreate
+
+from app.models import Booking, BookingCreate, Room, RoomCreate
 from app.services import (
-    service,
+    BookingConflictError,
     NotFoundError,
     ValidationError,
-    BookingConflictError,
+    service,
 )
 
 app = FastAPI(
@@ -27,7 +28,7 @@ def create_room(room_data: RoomCreate):
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-@app.get("/rooms", response_model=List[Room], tags=["Rooms"])
+@app.get("/rooms", response_model=list[Room], tags=["Rooms"])
 def get_rooms():
     return service.get_rooms()
 
@@ -58,7 +59,7 @@ def create_booking(booking_data: BookingCreate):
     except BookingConflictError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-@app.get("/bookings", response_model=List[Booking], tags=["Bookings"])
+@app.get("/bookings", response_model=list[Booking], tags=["Bookings"])
 def get_bookings():
     return service.get_bookings()
 

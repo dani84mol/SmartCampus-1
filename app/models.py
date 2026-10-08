@@ -1,12 +1,13 @@
 from datetime import date, time
-from typing import List
+
 from pydantic import BaseModel, Field
+
 
 class RoomCreate(BaseModel):
     nombre: str
     edificio: str
     capacidad: int = Field(gt=0, description="La capacidad debe ser mayor que 0")
-    equipamiento: List[str] = []
+    equipamiento: list[str] = []
 
 class Room(RoomCreate):
     id: int
