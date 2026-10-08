@@ -1,4 +1,4 @@
-name: SmartCampus CI Pipeline
+name: SmartCampus CI/CD Pipeline
 
 on:
   push:
@@ -7,40 +7,53 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  test-and-lint:
+  test-matrix:
+    name: Test & Lint (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
 
     steps:
-      - name: Checkout del repositorio
+      - name: Etapa 1 — Checkout del repositorio
         uses: actions/checkout@v4
 
       - name: Configurar entorno Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      - name: Instalar dependencias
+      - name: Etapa 2 — Instalación de dependencias
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Ejecutar linter con Ruff
+      - name: Etapa 3 — Análisis de calidad y formato
         run: |
           ruff check .
 
-      - name: Ejecutar suite de pruebas con Pytest
+      - name: Etapa 4 — Ejecución de suite de pruebas
         run: |
           pytest -v
 
-  docker-build:
-    needs: test-and-lint
+  docker-build-and-validate:
+    name: Build & Validate Docker Container
+    needs: test-matrix
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del repositorio
+      - name: Etapa 1 — Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Verificar construcción de la imagen Docker
+      - name: Etapa 5 — Construcción de imagen Docker
         run: |
-          docker build -t smartcampus-api:ci .
+          docker build -t smartcampus-api:latest .
+
+      - name: Etapa 6 — Validación de ejecución del contenedor
+        run: |
+          docker run -d --name smartcampus_test -p 8000:8000 smartcampus-api:latest
+          sleep 5
+          docker ps
+          curl --fail http://127.0.0.1:8000/health || exit 1
+          docker stop smartcampus_test
