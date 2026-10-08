@@ -1,0 +1,1 @@
+Microservicio REST para la gestión de aulas y reservas universitarias.
