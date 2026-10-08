@@ -57,3 +57,36 @@ jobs:
           docker ps
           curl --fail http://127.0.0.1:8000/health || exit 1
           docker stop smartcampus_test
+
+  deploy:
+    name: Deploy to Production Environment
+    needs: docker-build-and-validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Etapa 7 — Despliegue automatizado del contenedor
+        env:
+          APP_PORT: "8000"
+          APP_ENV: "production"
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          echo "Iniciando despliegue automatizado en entorno de producción..."
+          # Comprobar que el secreto existe sin mostrarlo en logs
+          if [ -z "$DB_PASSWORD" ]; then
+            echo "ERROR: El secreto DB_PASSWORD no esta configurado en GitHub Secrets."
+            exit 1
+          fi
+          echo "Variables de entorno y secretos verificados correctamente."
+          
+          # Despliegue con Docker Compose
+          docker compose up --build -d
+          sleep 5
+          
+          # Verificación de salud del despliegue en producción
+          docker compose ps
+          curl --fail http://127.0.0.1:8000/health || exit 1
+          echo "🚀 Despliegue completado con éxito. Servicio activo y saludable."
