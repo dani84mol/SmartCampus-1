@@ -7,7 +7,24 @@ services:
       dockerfile: Dockerfile
     container_name: smartcampus_api_container
     ports:
-      - "8000:8000"
+      - "${APP_PORT:-8000}:8000"
     environment:
-      - PORT=8000
+      - APP_ENV=${APP_ENV:-development}
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-smartcampus}
+      - DB_USER=${DB_USER:-smartcampus_user}
+      - DB_PASSWORD=${DB_PASSWORD:-example_secret_password}
+    networks:
+      - smartcampus-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
+
+networks:
+  smartcampus-net:
+    driver: bridge
