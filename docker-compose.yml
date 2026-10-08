@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  smartcampus-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartcampus_api_container
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    restart: unless-stopped
