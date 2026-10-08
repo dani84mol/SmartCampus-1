@@ -1,14 +1,17 @@
-from typing import List, Optional
-from app.models import Room, RoomCreate, Booking, BookingCreate
+from app.models import Booking, BookingCreate, Room, RoomCreate
+
 
 class BookingConflictError(Exception):
     pass
 
+
 class NotFoundError(Exception):
     pass
 
+
 class ValidationError(Exception):
     pass
+
 
 class CampusService:
     def __init__(self):
@@ -17,70 +20,56 @@ class CampusService:
         self._room_id_counter = 1
         self._booking_id_counter = 1
 
-    # --- Gestión de Aulas ---
     def create_room(self, room_data: RoomCreate) -> Room:
-        if room_data.capacidad <= 0:
-            raise ValidationError("La capacidad del aula debe ser mayor que 0")
-        room_id = self._room_id_counter
-        room = Room(id=room_id, **room_data.model_dump())
-        self.rooms[room_id] = room
+        room = Room(id=self._room_id_counter, **room_data.model_dump())
+        self.rooms[self._room_id_counter] = room
         self._room_id_counter += 1
         return room
 
-    def get_rooms(self) -> List[Room]:
-        return list(self.rooms.values())
-
     def get_room(self, room_id: int) -> Room:
         if room_id not in self.rooms:
-            raise NotFoundError(f"El aula con id {room_id} no existe")
+            raise NotFoundError(f"Aula con ID {room_id} no encontrada")
         return self.rooms[room_id]
+
+    def get_rooms(self) -> list[Room]:
+        return list(self.rooms.values())
 
     def delete_room(self, room_id: int) -> None:
         if room_id not in self.rooms:
-            raise NotFoundError(f"El aula con id {room_id} no existe")
+            raise NotFoundError(f"Aula con ID {room_id} no encontrada")
         del self.rooms[room_id]
-        # Si se borra un aula, se eliminan sus reservas asociadas
-        self.bookings = {
-            b_id: b for b_id, b in self.bookings.items() if b.aula_id != room_id
-        }
 
-    # --- Gestión de Reservas ---
     def create_booking(self, booking_data: BookingCreate) -> Booking:
-        # Validación: El aula debe existir
+        # Validación: Aula existente
         if booking_data.aula_id not in self.rooms:
-            raise NotFoundError(f"No se puede reservar: el aula {booking_data.aula_id} no existe")
+            raise NotFoundError(f"El aula {booking_data.aula_id} no existe")
 
-        # Validación: Hora de inicio debe ser anterior a la de fin
+        # Validación: Coherencia de horas
         if booking_data.hora_inicio >= booking_data.hora_fin:
-            raise ValidationError("La hora de inicio debe ser anterior a la hora de finalización")
+            raise ValidationError("La hora de inicio debe ser anterior a la hora de fin")
 
         # Validación: Solapamiento de reservas en el mismo aula y fecha
         for existing in self.bookings.values():
             if (
                 existing.aula_id == booking_data.aula_id
                 and existing.fecha == booking_data.fecha
+                and booking_data.hora_inicio < existing.hora_fin
+                and booking_data.hora_fin > existing.hora_inicio
             ):
-                # Hay solapamiento si:
-                # nueva_inicio < existente_fin Y nueva_fin > existente_inicio
-                if (
-                    booking_data.hora_inicio < existing.hora_fin
-                    and booking_data.hora_fin > existing.hora_inicio
-                ):
-                    raise BookingConflictError("Existe un solapamiento con otra reserva en esa aula")
+                raise BookingConflictError("Existe un solapamiento con otra reserva en esa aula")
 
-        booking_id = self._booking_id_counter
-        booking = Booking(id=booking_id, **booking_data.model_dump())
-        self.bookings[booking_id] = booking
+        booking = Booking(id=self._booking_id_counter, **booking_data.model_dump())
+        self.bookings[self._booking_id_counter] = booking
         self._booking_id_counter += 1
         return booking
 
-    def get_bookings(self) -> List[Booking]:
+    def get_bookings(self) -> list[Booking]:
         return list(self.bookings.values())
 
     def delete_booking(self, booking_id: int) -> None:
         if booking_id not in self.bookings:
-            raise NotFoundError(f"La reserva con id {booking_id} no existe")
+            raise NotFoundError(f"Reserva con ID {booking_id} no encontrada")
         del self.bookings[booking_id]
 
-# Instancia global única para almacenar el estado
+
 service = CampusService()
