@@ -15,6 +15,16 @@ app = FastAPI(
     version="1.0.0",
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción se deben acotar los orígenes permitidos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["Health"])
 def health_check():
     return {"status": "ok", "service": "smartcampus-api"}
