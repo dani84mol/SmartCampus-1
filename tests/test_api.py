@@ -142,3 +142,56 @@ def test_create_booking_overlap_conflict():
 def test_delete_booking_not_found():
     response = client.delete("/bookings/999")
     assert response.status_code == 404
+
+def test_get_rooms_list():
+    # Crear un par de aulas de prueba
+    client.post("/rooms", json={"nombre": "Aula 1", "edificio": "A", "capacidad": 20})
+    client.post("/rooms", json={"nombre": "Aula 2", "edificio": "B", "capacidad": 40})
+    
+    response = client.get("/rooms")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["nombre"] == "Aula 1"
+    assert data[1]["nombre"] == "Aula 2"
+
+def test_get_bookings_list():
+    # Crear un aula previa y una reserva
+    room_res = client.post("/rooms", json={"nombre": "Laboratorio", "edificio": "C", "capacidad": 30})
+    room_id = room_res.json()["id"]
+    
+    client.post("/bookings", json={
+        "aula_id": room_id,
+        "usuario": "Ana Gómez",
+        "fecha": "2026-11-20",
+        "hora_inicio": "10:00:00",
+        "hora_fin": "12:00:00"
+    })
+    
+    response = client.get("/bookings")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["usuario"] == "Ana Gómez"
+
+def test_delete_booking_success():
+    # Crear aula y reserva
+    room_res = client.post("/rooms", json={"nombre": "Seminario", "edificio": "D", "capacidad": 15})
+    room_id = room_res.json()["id"]
+    
+    booking_res = client.post("/bookings", json={
+        "aula_id": room_id,
+        "usuario": "Carlos Ruiz",
+        "fecha": "2026-11-21",
+        "hora_inicio": "15:00:00",
+        "hora_fin": "17:00:00"
+    })
+    booking_id = booking_res.json()["id"]
+    
+    # Borrar reserva existente -> 204 No Content
+    del_res = client.delete(f"/bookings/{booking_id}")
+    assert del_res.status_code == 204
+    
+    # Intentar borrar la misma reserva otra vez -> 404 Not Found
+    del_again = client.delete(f"/bookings/{booking_id}")
+    assert del_again.status_code == 404
