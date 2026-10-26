@@ -159,7 +159,7 @@ docker compose down
 El proyecto cuenta con una batería completa de pruebas automáticas desarrolladas con `pytest` y `httpx` (`TestClient`), cubriendo tanto la lógica de negocio unitaria como los puntos de entrada HTTP de la API REST.
 
 ### Ejecución de pruebas
-```bash
+```bash```
 # Ejecutar todas las pruebas con salida detallada
 pytest -v
 
