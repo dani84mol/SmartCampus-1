@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartCampus - Gestión de Aulas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>SmartCampus - Panel de Control</h1>
+
+    <!-- Sección de Aulas -->
+    <section>
+        <h2>Aulas Disponibles</h2>
+        <div id="msg-room"></div>
+        <form id="room-form">
+            <div class="form-group">
+                <label>Nombre del Aula:</label>
+                <input type="text" id="room-name" required>
+            </div>
+            <div class="form-group">
+                <label>Edificio:</label>
+                <input type="text" id="room-building" required>
+            </div>
+            <div class="form-group">
+                <label>Capacidad:</label>
+                <input type="number" id="room-capacity" min="1" required>
+            </div>
+            <button type="submit">Crear Aula</button>
+        </form>
+        <ul id="rooms-list"></ul>
+    </section>
+
+    <!-- Sección de Reservas -->
+    <section style="margin-top: 40px;">
+        <h2>Gestión de Reservas</h2>
+        <div id="msg-booking"></div>
+        <form id="booking-form">
+            <div class="form-group">
+                <label>Seleccionar Aula:</label>
+                <select id="booking-room-select" required></select>
+            </div>
+            <div class="form-group">
+                <label>Usuario / Profesor:</label>
+                <input type="text" id="booking-user" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha:</label>
+                <input type="date" id="booking-date" required>
+            </div>
+            <div class="form-group">
+                <label>Hora Inicio:</label>
+                <input type="time" id="booking-start" required>
+            </div>
+            <div class="form-group">
+                <label>Hora Fin:</label>
+                <input type="time" id="booking-end" required>
+            </div>
+            <button type="submit">Reservar Aula</button>
+        </form>
+        <ul id="bookings-list"></ul>
+    </section>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

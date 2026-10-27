@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+echo "==> [pre-commit] Verificando calidad de código con Ruff..."
+ruff check .
+if [ $? -ne 0 ]; then
+    echo "❌ Commit rechazado: Fallos de calidad de código encontrados."
+    exit 1
+fi
+
+echo "==> [pre-commit] Ejecutando tests unitarios..."
+pytest tests/test_services.py -q
+if [ $? -ne 0 ]; then
+    echo "❌ Commit rechazado: Los tests unitarios han fallado."
+    exit 1
+fi
+
+echo "✅ Calidad y tests unitarios superados."
+exit 0

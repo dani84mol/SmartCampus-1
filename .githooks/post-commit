@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+LOG_FILE="commit-log.txt"
+HASH=$(git log -1 --pretty=format:"%h")
+AUTHOR=$(git log -1 --pretty=format:"%an")
+DATE=$(git log -1 --pretty=format:"%ad" --date=format:"%d/%m/%Y %H:%M:%S")
+MSG=$(git log -1 --pretty=format:"%s")
+
+echo "----------------------------------------" >> "$LOG_FILE"
+echo "Autor: $AUTHOR" >> "$LOG_FILE"
+echo "Hash: $HASH" >> "$LOG_FILE"
+echo "Mensaje: $MSG" >> "$LOG_FILE"
+echo "Fecha: $DATE" >> "$LOG_FILE"
+
+echo "📝 Registro añadido a $LOG_FILE (Commit: $HASH)"

@@ -1,0 +1,92 @@
+name: SmartCampus CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  test-matrix:
+    name: Test & Lint (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Etapa 1 — Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Etapa 2 — Instalación de dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Etapa 3 — Análisis de calidad y formato
+        run: |
+          ruff check .
+
+      - name: Etapa 4 — Ejecución de suite de pruebas
+        run: |
+          pytest -v
+
+  docker-build-and-validate:
+    name: Build & Validate Docker Container
+    needs: test-matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Etapa 1 — Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Etapa 5 — Construcción de imagen Docker
+        run: |
+          docker build -t smartcampus-api:latest .
+
+      - name: Etapa 6 — Validación de ejecución del contenedor
+        run: |
+          docker run -d --name smartcampus_test -p 8000:8000 smartcampus-api:latest
+          sleep 5
+          docker ps
+          curl --fail http://127.0.0.1:8000/health || exit 1
+          docker stop smartcampus_test
+
+  deploy:
+    name: Deploy to Production Environment
+    needs: docker-build-and-validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Etapa 7 — Despliegue automatizado del contenedor
+        env:
+          APP_PORT: "8000"
+          APP_ENV: "production"
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          echo "Iniciando despliegue automatizado en entorno de producción..."
+          # Comprobar que el secreto existe sin mostrarlo en logs
+          if [ -z "$DB_PASSWORD" ]; then
+            echo "ERROR: El secreto DB_PASSWORD no esta configurado en GitHub Secrets."
+            exit 1
+          fi
+          echo "Variables de entorno y secretos verificados correctamente."
+          
+          # Despliegue con Docker Compose
+          docker compose up --build -d
+          sleep 5
+          
+          # Verificación de salud del despliegue en producción
+          docker compose ps
+          curl --fail http://127.0.0.1:8000/health || exit 1
+          echo "🚀 Despliegue completado con éxito. Servicio activo y saludable."

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+echo "==> [pre-push] Ejecutando suite completa de tests..."
+pytest -q
+if [ $? -ne 0 ]; then
+    echo "❌ Push rechazado: existen tests fallidos"
+    exit 1
+fi
+
+echo "✅ Todos los tests superados"
+exit 0
