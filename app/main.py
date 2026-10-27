@@ -1,5 +1,6 @@
-
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # <-- 1. Añadir esta importación
 
 from app.models import Booking, BookingCreate, Room, RoomCreate
 from app.services import (
@@ -15,11 +16,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
-from fastapi.middleware.cors import CORSMiddleware
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción se deben acotar los orígenes permitidos
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,7 +29,6 @@ def health_check():
     return {"status": "ok", "service": "smartcampus-api"}
 
 # --- Endpoints de Aulas ---
-
 @app.post("/rooms", response_model=Room, status_code=status.HTTP_201_CREATED, tags=["Rooms"])
 def create_room(room_data: RoomCreate):
     try:
@@ -57,7 +55,6 @@ def delete_room(id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 # --- Endpoints de Reservas ---
-
 @app.post("/bookings", response_model=Booking, status_code=status.HTTP_201_CREATED, tags=["Bookings"])
 def create_booking(booking_data: BookingCreate):
     try:
@@ -79,3 +76,6 @@ def delete_booking(id: int):
         service.delete_booking(id)
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+# --- 2. Montar archivos estáticos del Frontend (AÑADIR ESTA LÍNEA AL FINAL) ---
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
