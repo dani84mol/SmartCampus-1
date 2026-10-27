@@ -33,8 +33,8 @@ En los entornos universitarios, la gestión manual de aulas y reservas suele gen
 ## 🏗️ Arquitectura
 
 La aplicación sigue una arquitectura en capas **MVC/Clean Architecture** desacoplada, priorizando la simplicidad, el rendimiento asíncrono y la facilidad de pruebas:
-
-┌─────────────────────────────────────────┐
+```text
+              ┌─────────────────────────────────────────┐
               │           Cliente HTTP / FrontEnd       │
               └────────────────────┬────────────────────┘
                                    │ HTTP / JSON
@@ -57,8 +57,8 @@ La aplicación sigue una arquitectura en capas **MVC/Clean Architecture** desaco
 │                                     │ Validaciones de Esquema             │
 │                                     ▼                                     │
 │   ┌───────────────────────────────────────────────────────────────────┐   │
-│   │                   Capa de Servicio (app/services.py)               │   │
-│   │   - CampusService: Lógica de negocio y verificación de conflictos  │   │
+│   │                   Capa de Servicio (app/services.py)              │   │
+│   │   - CampusService: Lógica de negocio y verificación de conflictos │   │
 │   └─────────────────────────────────┬─────────────────────────────────┘   │
 │                                     │                                     │
 │                                     ▼                                     │
@@ -68,7 +68,7 @@ La aplicación sigue una arquitectura en capas **MVC/Clean Architecture** desaco
 │   │   - self.bookings: dict[int, Booking]                             │   │
 │   └───────────────────────────────────────────────────────────────────┘   │
 └───────────────────────────────────────────────────────────────────────────┘
-
+```
 ### Componentes principales y comunicación:
 * **`app/main.py`**: Punto de entrada de la aplicación FastAPI. Expone los endpoints REST, gestiona el middleware CORS, mapea excepciones personalizadas a códigos de estado HTTP (201, 400, 404, 409) y sirve la interfaz web estática opcional.
 * **`app/models.py`**: Define los esquemas de datos con Pydantic (`RoomCreate`, `Room`, `BookingCreate`, `Booking`), asegurando la tipificación estricta del cuerpo de las peticiones.
@@ -84,11 +84,12 @@ La aplicación sigue una arquitectura en capas **MVC/Clean Architecture** desaco
 
 ### Pasos de instalación
 1. **Clonar el repositorio:**
-   ```bash
+```bash
    git clone [https://github.com/dani84mol/smartcampus.git](https://github.com/dani84mol/smartcampus.git)
    cd smartcampus
-
+```
 2. Crear y activar el entorno virtual:
+```bash
     # En Linux / macOS:
     python3 -m venv .venv
     source .venv/bin/activate
@@ -96,38 +97,45 @@ La aplicación sigue una arquitectura en capas **MVC/Clean Architecture** desaco
     # En Windows (Git   o PowerShell):
     python -m venv .venv
     .venv\Scripts\activate
+```
 3. Instalar dependencias:
-
+```bash
     pip install --upgrade pip
     pip install -r requirements.txt
+```
 4. Configurar variables de entorno:
+```bash
     cp .env.example .env
-
+```
 5. Ejecución Local
-    Para ejecutar el servidor de desarrollo local mediante Uvicorn: 
+```bash
+    # Para ejecutar el servidor de desarrollo local mediante Uvicorn: 
     uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
+```
 Una vez en ejecución, la aplicación estará disponible en:
 
 Panel de Control Web / Frontend: http://localhost:8000
+
 Documentación Interactiva Swagger UI: http://localhost:8000/docs
+
 Documentación ReDoc: http://localhost:8000/redoc
+
 Endpoint de Salud (Health Check): http://localhost:8000/health
 
 ### Construcción de la imagen Docker
 Para construir la imagen de la aplicación utilizando la definición del `Dockerfile`:
-    ```bash
+```bash
     docker build -t smartcampus-api .
-
+```
 1. Ejecución del contenedor
-Para iniciar el contenedor de manera independiente exponiendo el puerto 8000 y cargando la configuración de entorno:
-
-docker run -d \
-  --name smartcampus_container \
-  -p 8000:8000 \
-  --env-file .env \
-  smartcampus-api
-
+```bash
+    Para iniciar el contenedor de manera independiente exponiendo el puerto 8000 y cargando la configuración de entorno:
+    docker run -d \
+    --name smartcampus_container \
+    -p 8000:8000 \
+    --env-file .env \
+    smartcampus-api
+```
 Para verificar que el contenedor se encuentra en ejecución y la API responde correctamente:
 
 docker ps
@@ -135,7 +143,7 @@ curl http://localhost:8000/health
 
 2. Docker Compose
 El proyecto incluye un archivo docker-compose.yml para orquestar la aplicación garantizando la inyección de variables de entorno, comprobaciones periódicas de salud (healthchecks) y comunicación dentro de una red aislada (smartcampus-net).
-
+```bash
 Iniciar la aplicación orquestada
 Para construir la imagen y desplegar la arquitectura completa en segundo plano (detached mode):
 
@@ -153,11 +161,11 @@ Detener los servicios
 Para detener y eliminar los contenedores y redes creados por Compose:
 
 docker compose down
-
+```
 ## Tests
 
 El proyecto cuenta con una batería completa de pruebas automáticas desarrolladas con `pytest` y `httpx` (`TestClient`), cubriendo tanto la lógica de negocio unitaria como los puntos de entrada HTTP de la API REST.
-
+```bash
 ### Ejecución de pruebas
 ```bash```
 # Ejecutar todas las pruebas con salida detallada
@@ -165,7 +173,7 @@ pytest -v
 
 # Ejecutar pruebas generando informe de cobertura
 pytest --cov=app --cov-report=term-missing
-
+```
 Cobertura de las pruebas (tests/)
 - test_services.py (Tests Unitarios):
     Creación, lectura y eliminación de aulas.
@@ -213,6 +221,7 @@ post-push:
 ## GitHub Actions
 
 El flujo de Integración y Despliegue Continuo (CI/CD) está definido en `.github/workflows/ci-cd.yml` y automatiza las comprobaciones en cada cambio subido al repositorio[cite: 1, 2].
+```text
 
                 TRIGGER: push / pull_request
                                 │
@@ -243,7 +252,7 @@ El flujo de Integración y Despliegue Continuo (CI/CD) está definido en `.githu
 │  - Despliegue automatizado en servidor/runner mediante Docker Compose   │
 │  - Inyección de variables y GitHub Secrets                              │
 └─────────────────────────────────────────────────────────────────────────┘
-
+```
 ### Configuración del Workflow
 
 * **Eventos disparadores (Triggers)**: Se ejecuta automáticamente ante cualquier `push` a la rama principal (`main`) o en aperturas/actualizaciones de `pull_request`[cite: 2].
